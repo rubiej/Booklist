@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const Book = require('./booklist');
+const Book = require('./booklist'); // ✅ Correct import
 
 const app = express();
 const PORT = 3000;
@@ -45,7 +45,29 @@ app.get('/books', async (req, res) => {
   }
 });
 
-// ✅ Return book by ID
+// ✅ Search books by title or author — must come before /books/:id
+app.get('/books/search', async (req, res) => {
+  try {
+    const { title, author } = req.query;
+    const query = {};
+
+    if (title) {
+      query.title = { $regex: title, $options: 'i' };
+    }
+
+    if (author) {
+      query.author = { $regex: author, $options: 'i' };
+    }
+
+    const results = await Book.find(query);
+    res.json(results);
+  } catch (err) {
+    console.error('Search error:', err.message);
+    res.status(500).json({ error: 'Search failed.' });
+  }
+});
+
+// ✅ Return book by ID — only once
 app.get('/books/:id', async (req, res) => {
   try {
     const book = await Book.findById(req.params.id);
