@@ -1,111 +1,52 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const Book = require('./booklist'); // ✅ Correct import
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
+const User = require("./models/auth/User");
+const bookRoutes = require("./routes/bookRoutes");
+const authMiddleware = require("./middleware/auth");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3001;
 
-// ✅ Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('✅ Connected to MongoDB Atlas'))
-.catch((err) => console.error('❌ MongoDB connection error:', err));
-
-// ✅ Middleware
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(express.json());
 
-// ✅ Root route
-app.get('/', (req, res) => {
-  res.send('📚 Welcome to the Book List API! Use /books to interact.');
+// Root
+app.get("/", (req, res) => {
+  res.send("📚 Welcome to the Booklist API");
 });
 
-// ✅ Create a new book
-app.post('/books', async (req, res) => {
-  try {
-    const { title, author, read } = req.body;
-    const book = new Book({ title, author, read });
-    const savedBook = await book.save();
-    res.status(201).json(savedBook);
-  } catch (err) {
-    console.error('Save error:', err.message);
-    res.status(400).json({ error: 'Invalid book data.' });
+// Register
+app.post("/register", async (req, res) => {
+  const { username, password } = req.body;
+  const existing = await User.findOne({ username });
+  if (existing) return res.status(409).json({ message: "Username already exists" });
+
+  const hashed = await bcrypt.hash(password, 10);
+  const newUser = new User({ username, password: hashed });
+  await newUser.save();
+  res.status(201).json({ message: "User registered" });
+});
+
+// Login
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+  const user = await User.findOne({ username });
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    return res.status(401).json({ message: "Invalid credentials" });
   }
+
+  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+  res.json({ token });
 });
 
-// ✅ Return all books
-app.get('/books', async (req, res) => {
-  try {
-    const books = await Book.find();
-    res.json(books);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch books.' });
-  }
-});
+// Protected book routes
+app.use("/api/books", authMiddleware, bookRoutes);
 
-// ✅ Search books by title or author — must come before /books/:id
-app.get('/books/search', async (req, res) => {
-  try {
-    const { title, author } = req.query;
-    const query = {};
-
-    if (title) {
-      query.title = { $regex: title, $options: 'i' };
-    }
-
-    if (author) {
-      query.author = { $regex: author, $options: 'i' };
-    }
-
-    const results = await Book.find(query);
-    res.json(results);
-  } catch (err) {
-    console.error('Search error:', err.message);
-    res.status(500).json({ error: 'Search failed.' });
-  }
-});
-
-// ✅ Return book by ID — only once
-app.get('/books/:id', async (req, res) => {
-  try {
-    const book = await Book.findById(req.params.id);
-    if (!book) return res.status(404).json({ error: 'Book not found.' });
-    res.json(book);
-  } catch (err) {
-    res.status(400).json({ error: 'Invalid ID format.' });
-  }
-});
-
-// ✅ Edit book by ID
-app.put('/books/:id', async (req, res) => {
-  try {
-    const updated = await Book.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!updated) return res.status(404).json({ error: 'Book not found.' });
-    res.json(updated);
-  } catch (err) {
-    console.error('Update error:', err.message);
-    res.status(400).json({ error: 'Invalid update or ID.' });
-  }
-});
-
-// ✅ Delete book by ID
-app.delete('/books/:id', async (req, res) => {
-  try {
-    const deleted = await Book.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ error: 'Book not found.' });
-    res.json({ message: 'Book deleted.', book: deleted });
-  } catch (err) {
-    res.status(400).json({ error: 'Invalid ID format.' });
-  }
-});
-
-// ✅ Start server
+// Start
 app.listen(PORT, () => {
-  console.log(`📚 Book List API running at http://localhost:${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
