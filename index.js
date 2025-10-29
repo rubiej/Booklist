@@ -1,12 +1,21 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
+const User = require("./models/auth/User");
+const bookRoutes = require("./routes/bookRoutes");
+const authMiddleware = require("./middleware/auth");
+
+const app = express(); // ✅ Moved this up before using `app`
 
 const allowedOrigins = [
   'http://localhost:3000', // for local dev
   'https://bookauth.vercel.app' // for production
 ];
 
+// ✅ CORS setup
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -15,21 +24,9 @@ app.use(cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true // if you're using cookies or auth headers
+  credentials: true
 }));
 
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-
-const User = require("./models/auth/User");
-const bookRoutes = require("./routes/bookRoutes");
-const authMiddleware = require("./middleware/auth");
-
-const app = express();
-const PORT = process.env.PORT || 3001;
-
-// ✅ Middleware
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(express.json());
 
 // ✅ Root
@@ -65,6 +62,7 @@ app.post("/login", async (req, res) => {
 app.use("/api/books", authMiddleware, bookRoutes);
 
 // ✅ Start server
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
