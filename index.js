@@ -12,11 +12,11 @@ const app = express();
 
 // ✅ Define allowed origins
 const allowedOrigins = [
-  "http://localhost:3000",           // Local development
-  "https://bookauth.vercel.app"      // Production frontend
+  "http://localhost:3000",
+  "https://bookauth.vercel.app"
 ];
 
-// ✅ CORS configuration reused for all requests
+// ✅ Reusable CORS options
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -25,13 +25,15 @@ const corsOptions = {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 };
 
-// ✅ Apply CORS middleware
+// ✅ Apply CORS middleware globally
 app.use(cors(corsOptions));
 
-// ✅ Handle preflight OPTIONS requests
+// ✅ Handle preflight requests explicitly
 app.options("*", cors(corsOptions));
 
 // ✅ Parse JSON bodies
