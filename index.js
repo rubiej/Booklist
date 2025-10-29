@@ -1,5 +1,4 @@
 require("dotenv").config();
-// const PORT = process.env.PORT || 3001;
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
@@ -10,22 +9,18 @@ const bookRoutes = require("./routes/bookRoutes");
 const authMiddleware = require("./middleware/auth");
 
 const app = express();
-// ✅ Use PORT from environment or fallback to 3001
 const PORT = process.env.PORT || 3001;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-
-
+// ✅ Middleware
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(express.json());
 
-// Root
+// ✅ Root
 app.get("/", (req, res) => {
   res.send("📚 Welcome to the Booklist API");
 });
 
-// Register
+// ✅ Register
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
   const existing = await User.findOne({ username });
@@ -37,7 +32,7 @@ app.post("/register", async (req, res) => {
   res.status(201).json({ message: "User registered" });
 });
 
-// Login
+// ✅ Login
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ username });
@@ -49,10 +44,10 @@ app.post("/login", async (req, res) => {
   res.json({ token });
 });
 
-// Protected book routes
+// ✅ Protected book routes
 app.use("/api/books", authMiddleware, bookRoutes);
 
-// Start
+// ✅ Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
