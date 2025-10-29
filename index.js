@@ -13,8 +13,8 @@ const app = express();
 // ✅ Define allowed origins
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://bookauth.vercel.app"
-   "https://bookauth-git-main-james-rubies-projects.vercel.app" 
+  "https://bookauth.vercel.app",
+  "https://bookauth-git-main-james-rubies-projects.vercel.app" 
 ];
 
 // ✅ Reusable CORS options
