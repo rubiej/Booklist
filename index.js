@@ -1,6 +1,23 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+
+const allowedOrigins = [
+  'http://localhost:3000', // for local dev
+  'https://bookauth.vercel.app' // for production
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true // if you're using cookies or auth headers
+}));
+
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
