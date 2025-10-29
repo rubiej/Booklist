@@ -40,11 +40,12 @@ app.options("*", cors(corsOptions));
 // ✅ Parse JSON bodies
 app.use(express.json());
 
-// ✅ Routes
+// ✅ Root route
 app.get("/", (req, res) => {
   res.send("📚 Welcome to the Booklist API");
 });
 
+// ✅ Register route
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
   const existing = await User.findOne({ username });
@@ -56,6 +57,7 @@ app.post("/register", async (req, res) => {
   res.status(201).json({ message: "User registered" });
 });
 
+// ✅ Login route
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ username });
@@ -67,7 +69,13 @@ app.post("/login", async (req, res) => {
   res.json({ token });
 });
 
-app.use("/api/books", authMiddleware, bookRoutes);
+// ✅ Allow OPTIONS requests to pass through authMiddleware
+app.use("/api/books", (req, res, next) => {
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204); // No Content
+  }
+  authMiddleware(req, res, next);
+}, bookRoutes);
 
 // ✅ Start server
 const PORT = process.env.PORT || 3001;
