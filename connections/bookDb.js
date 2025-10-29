@@ -1,3 +1,6 @@
+
+require("dotenv").config();
+
 const mongoose = require("mongoose");
 
 const bookConnection = mongoose.createConnection(process.env.BOOK_DB_URI, {
