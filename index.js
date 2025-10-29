@@ -70,12 +70,14 @@ app.post("/login", async (req, res) => {
 });
 
 // ✅ Allow OPTIONS requests to pass through authMiddleware
-app.use("/api/books", (req, res, next) => {
+
+app.use("/api/books", cors(corsOptions), (req, res, next) => {
   if (req.method === "OPTIONS") {
-    return res.sendStatus(204); // No Content
+    return res.sendStatus(204);
   }
   authMiddleware(req, res, next);
 }, bookRoutes);
+
 
 // ✅ Start server
 const PORT = process.env.PORT || 3001;
