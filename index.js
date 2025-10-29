@@ -27,6 +27,8 @@ app.use(cors({
   credentials: true
 }));
 
+app.options("*", cors()); // ✅ Add this line
+
 app.use(express.json());
 
 // ✅ Root
