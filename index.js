@@ -10,7 +10,12 @@ const bookRoutes = require("./routes/bookRoutes");
 const authMiddleware = require("./middleware/auth");
 
 const app = express();
+// ✅ Use PORT from environment or fallback to 3001
 const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+
 
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(express.json());
